@@ -2,8 +2,7 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
-
+from selenium.common.exceptions import TimeoutException
 
 class Dashboard:
 
@@ -60,11 +59,20 @@ class Dashboard:
     def is_quick_launch_visible(self):
         return self.wait.until(EC.visibility_of_element_located(self.QUICK_LAUNCH_WIDGET)).is_displayed()
 
+    # --- Buzz aliases for tests ---
     def is_buzz_visible(self):
         try:
             return self.wait.until(EC.visibility_of_element_located(self.BUZZ_WIDGET)).is_displayed()
         except TimeoutException:
             return False
+
+    def is_buzz_widget_visible(self):
+        # alias for test_buzz_widget_visible
+        return self.is_buzz_visible()
+
+    def is_buzz_loaded(self):
+        # alias for test_my_buzz_post_dashboard
+        return self.is_buzz_visible()
 
     def buzz_post(self):
         try:
@@ -82,22 +90,13 @@ class Dashboard:
 
     # ---------------- QUICK LAUNCH ----------------
     def click_assign_leave(self):
-        try:
-            self.wait.until(EC.element_to_be_clickable(self.ASSIGN_LEAVE_BTN)).click()
-        except TimeoutException:
-            self.driver.get("https://opensource-demo.orangehrmlive.com/web/index.php/leave/assignLeave")
+        self.wait.until(EC.element_to_be_clickable(self.ASSIGN_LEAVE_BTN)).click()
 
     def click_leave_list(self):
-        try:
-            self.wait.until(EC.element_to_be_clickable(self.LEAVE_LIST_BTN)).click()
-        except TimeoutException:
-            self.driver.get("https://opensource-demo.orangehrmlive.com/web/index.php/leave/viewLeaveList")
+        self.wait.until(EC.element_to_be_clickable(self.LEAVE_LIST_BTN)).click()
 
     def click_apply_leave(self):
-        try:
-            self.wait.until(EC.element_to_be_clickable(self.APPLY_LEAVE_BTN)).click()
-        except TimeoutException:
-            self.driver.get("https://opensource-demo.orangehrmlive.com/web/index.php/leave/applyLeave")
+        self.wait.until(EC.element_to_be_clickable(self.APPLY_LEAVE_BTN)).click()
 
     # ---------------- MY ACTIONS ----------------
     def click_pending_review(self):
@@ -105,18 +104,14 @@ class Dashboard:
             self.driver.execute_script("arguments[0].click();",
                                        self.driver.find_element(*self.PENDING_SELF_REVIEW))
         else:
-            self.driver.get(
-                "https://opensource-demo.orangehrmlive.com/web/index.php/performance/myPerformanceReview"
-            )
+            self.driver.get("/performance/myPerformanceReview")
 
     def click_candidate_interview(self):
         if self.driver.find_elements(*self.CANDIDATE_TO_INTERVIEW):
             self.driver.execute_script("arguments[0].click();",
                                        self.driver.find_element(*self.CANDIDATE_TO_INTERVIEW))
         else:
-            self.driver.get(
-                "https://opensource-demo.orangehrmlive.com/web/index.php/recruitment/viewCandidates?statusId=4"
-            )
+            self.driver.get("/recruitment/viewCandidates?statusId=4")
 
     # ---------------- DISTRIBUTION ----------------
     def subunit_panel(self):
@@ -138,10 +133,6 @@ class Dashboard:
     # ---------------- PUNCH ----------------
     def punch_in(self):
         try:
-            btn = self.wait.until(EC.element_to_be_clickable(self.PUNCH_BUTTON))
-            self.driver.execute_script("arguments[0].scrollIntoView(true);", btn)
-            btn.click()
-            return btn
+            return self.wait.until(EC.element_to_be_clickable(self.PUNCH_BUTTON))
         except TimeoutException:
-            # Button may not be visible or already punched in
             return None
