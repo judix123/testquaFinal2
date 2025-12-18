@@ -1,94 +1,84 @@
-# pages/dashboard_page.py
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+
 
 class Dashboard:
-
     URL_PART = "/dashboard"
 
-    DASHBOARD_HEADER = (By.XPATH, "//h6[text()='Dashboard']")
+    # Header
+    DASHBOARD_HEADER = (By.XPATH, "//h6[normalize-space()='Dashboard']")
 
-    # Time at Work
-    TIME_AT_WORK_WIDGET = (By.XPATH, "//p[text()='Time at Work']")
-    PUNCH_BUTTON = (By.XPATH, "//button[.//p[contains(text(),'Punch')]]")
+    # Widgets
+    TIME_AT_WORK_WIDGET = (By.XPATH, "//p[normalize-space()='Time at Work']")
+    MY_ACTIONS_WIDGET = (By.XPATH, "//p[normalize-space()='My Actions']")
+    QUICK_LAUNCH_WIDGET = (By.XPATH, "//p[normalize-space()='Quick Launch']")
+    BUZZ_WIDGET = (By.XPATH, "//p[normalize-space()='Buzz Latest Posts']")
+    LEAVE_TODAY_WIDGET = (By.XPATH, "//p[normalize-space()='Employees on Leave Today']")
 
-    # My Actions
-    MY_ACTIONS_WIDGET = (By.XPATH, "//p[text()='My Actions']")
-    PENDING_SELF_REVIEW = (By.XPATH, "//p[contains(text(),'Pending')]/ancestor::div[@role='row']")
-    CANDIDATE_TO_INTERVIEW = (By.XPATH, "//p[contains(text(),'Candidate')]/ancestor::div[@role='row']")
-
-    # Quick Launch
-    QUICK_LAUNCH_WIDGET = (By.XPATH, "//p[text()='Quick Launch']")
+    # Quick Launch buttons
     ASSIGN_LEAVE_BTN = (By.XPATH, "//button[@title='Assign Leave']")
     LEAVE_LIST_BTN = (By.XPATH, "//button[@title='Leave List']")
     APPLY_LEAVE_BTN = (By.XPATH, "//button[@title='Apply Leave']")
+    MY_LEAVE_BTN = (By.XPATH, "//button[@title='My Leave']")
+    MY_TIMESHEET_BTN = (By.XPATH, "//button[@title='My Timesheet']")
+
+    # My Actions
+    PENDING_SELF_REVIEW = (By.XPATH, "//p[contains(text(),'Pending Self Review')]")
+    CANDIDATE_TO_INTERVIEW = (By.XPATH, "//p[contains(text(),'Candidates to Interview')]")
+
+    # Charts
+    EMPLOYEE_SUB_UNIT_CHART = (By.XPATH, "//p[contains(text(),'Sub Unit')]")
+    EMPLOYEE_LOCATION_CHART = (By.XPATH, "//p[contains(text(),'Location')]")
 
     # Buzz
-    BUZZ_WIDGET = (By.XPATH, "//p[text()='Buzz Latest Posts']")
     BUZZ_POST = (By.XPATH, "//div[contains(@class,'orangehrm-buzz-post')]")
 
-    # Leave Today
-    LEAVE_TODAY_WIDGET = (By.XPATH, "//p[text()='Employees on Leave Today']")
-    ON_LEAVE_SETTING = (By.XPATH, "//p[text()='Employees on Leave Today']/ancestor::div//i")
+    # On Leave
+    ON_LEAVE_SETTING = (By.XPATH, "//p[text()='Employees on Leave Today']/ancestor::div[contains(@class,'header')]//i")
 
-    # Distribution
-    EMPLOYEE_SUB_UNIT_CHART = (By.XPATH, "//p[text()='Employee Distribution by Sub Unit']")
-    EMPLOYEE_LOCATION_CHART = (By.XPATH, "//p[text()='Employee Distribution by Location']")
+    # Punch In
+    PUNCH_IN = (By.XPATH, "//button[contains(.,'Punch In')]")
 
     def __init__(self, driver):
         self.driver = driver
-        self.wait = WebDriverWait(driver, 20)
+        self.wait = WebDriverWait(driver, 15)
 
-    # ---------------- LOAD ----------------
+    # ---------- Page Load ----------
     def is_loaded(self):
-        header = self.wait.until(EC.visibility_of_element_located(self.DASHBOARD_HEADER))
-        return header.is_displayed() and self.URL_PART in self.driver.current_url
+        self.wait.until(EC.url_contains(self.URL_PART))
+        return self.wait.until(
+            EC.visibility_of_element_located(self.DASHBOARD_HEADER)
+        ).is_displayed()
 
-    # ---------------- VISIBILITY ----------------
+    # ---------- Widget Visibility ----------
+    def _is_visible(self, locator):
+        return self.wait.until(
+            EC.visibility_of_element_located(locator)
+        ).is_displayed()
+
     def is_time_at_work_visible(self):
-        return self.wait.until(EC.visibility_of_element_located(self.TIME_AT_WORK_WIDGET)).is_displayed()
+        return self._is_visible(self.TIME_AT_WORK_WIDGET)
 
     def is_my_actions_visible(self):
-        return self.wait.until(EC.visibility_of_element_located(self.MY_ACTIONS_WIDGET)).is_displayed()
-
-    def is_my_actions_loaded(self):
-        return self.is_my_actions_visible() and self.URL_PART in self.driver.current_url
+        return self._is_visible(self.MY_ACTIONS_WIDGET)
 
     def is_quick_launch_visible(self):
-        return self.wait.until(EC.visibility_of_element_located(self.QUICK_LAUNCH_WIDGET)).is_displayed()
-
-    # --- Buzz aliases for tests ---
-    def is_buzz_visible(self):
-        try:
-            return self.wait.until(EC.visibility_of_element_located(self.BUZZ_WIDGET)).is_displayed()
-        except TimeoutException:
-            return False
+        return self._is_visible(self.QUICK_LAUNCH_WIDGET)
 
     def is_buzz_widget_visible(self):
-        # alias for test_buzz_widget_visible
-        return self.is_buzz_visible()
-
-    def is_buzz_loaded(self):
-        # alias for test_my_buzz_post_dashboard
-        return self.is_buzz_visible()
-
-    def buzz_post(self):
-        try:
-            return self.wait.until(EC.visibility_of_element_located(self.BUZZ_POST)).is_displayed()
-        except TimeoutException:
-            return True  # Demo may have no posts
+        return self._is_visible(self.BUZZ_WIDGET)
 
     def is_leave_today_widget_visible(self):
-        return self.wait.until(EC.visibility_of_element_located(self.LEAVE_TODAY_WIDGET)).is_displayed()
+        return self._is_visible(self.LEAVE_TODAY_WIDGET)
 
     def is_employee_distribution_charts_visible(self):
-        sub = self.wait.until(EC.visibility_of_element_located(self.EMPLOYEE_SUB_UNIT_CHART))
-        loc = self.wait.until(EC.visibility_of_element_located(self.EMPLOYEE_LOCATION_CHART))
-        return sub.is_displayed() and loc.is_displayed()
+        return (
+            self._is_visible(self.EMPLOYEE_SUB_UNIT_CHART)
+            and self._is_visible(self.EMPLOYEE_LOCATION_CHART)
+        )
 
-    # ---------------- QUICK LAUNCH ----------------
+    # ---------- Quick Launch ----------
     def click_assign_leave(self):
         self.wait.until(EC.element_to_be_clickable(self.ASSIGN_LEAVE_BTN)).click()
 
@@ -98,41 +88,30 @@ class Dashboard:
     def click_apply_leave(self):
         self.wait.until(EC.element_to_be_clickable(self.APPLY_LEAVE_BTN)).click()
 
-    # ---------------- MY ACTIONS ----------------
+    # ---------- My Actions ----------
     def click_pending_review(self):
-        if self.driver.find_elements(*self.PENDING_SELF_REVIEW):
-            self.driver.execute_script("arguments[0].click();",
-                                       self.driver.find_element(*self.PENDING_SELF_REVIEW))
-        else:
-            self.driver.get("/performance/myPerformanceReview")
+        self.wait.until(EC.element_to_be_clickable(self.PENDING_SELF_REVIEW)).click()
 
     def click_candidate_interview(self):
-        if self.driver.find_elements(*self.CANDIDATE_TO_INTERVIEW):
-            self.driver.execute_script("arguments[0].click();",
-                                       self.driver.find_element(*self.CANDIDATE_TO_INTERVIEW))
-        else:
-            self.driver.get("/recruitment/viewCandidates?statusId=4")
+        self.wait.until(EC.element_to_be_clickable(self.CANDIDATE_TO_INTERVIEW)).click()
 
-    # ---------------- DISTRIBUTION ----------------
-    def subunit_panel(self):
-        return self.wait.until(EC.visibility_of_element_located(self.EMPLOYEE_SUB_UNIT_CHART)).is_displayed()
+    # ---------- Buzz ----------
+    def has_buzz_post(self):
+        return self.wait.until(
+            EC.presence_of_element_located(self.BUZZ_POST)
+        ).is_displayed()
 
+    # ---------- Charts ----------
     def get_subunit_panel(self):
         return self.wait.until(EC.visibility_of_element_located(self.EMPLOYEE_SUB_UNIT_CHART))
-
-    def location_panel(self):
-        return self.wait.until(EC.visibility_of_element_located(self.EMPLOYEE_LOCATION_CHART)).is_displayed()
 
     def get_location_panel(self):
         return self.wait.until(EC.visibility_of_element_located(self.EMPLOYEE_LOCATION_CHART))
 
-    # ---------------- ICON ----------------
-    def icon_test(self):
-        return self.wait.until(EC.element_to_be_clickable(self.ON_LEAVE_SETTING))
+    # ---------- On Leave ----------
+    def open_on_leave_settings(self):
+        self.wait.until(EC.element_to_be_clickable(self.ON_LEAVE_SETTING)).click()
 
-    # ---------------- PUNCH ----------------
+    # ---------- Punch In ----------
     def punch_in(self):
-        try:
-            return self.wait.until(EC.element_to_be_clickable(self.PUNCH_BUTTON))
-        except TimeoutException:
-            return None
+        self.wait.until(EC.element_to_be_clickable(self.PUNCH_IN)).click()
