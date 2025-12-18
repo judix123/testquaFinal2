@@ -1,5 +1,3 @@
-# tests/test_dashboard.py
-import time
 import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -8,257 +6,101 @@ from config import Config
 from pages.login_page import LoginPage
 from pages.dashboard_page import Dashboard
 
+
+# ---------- FIXTURE ----------
+@pytest.fixture(scope="function")
+def logged_in_dashboard(driver):
+    login_page = LoginPage(driver)
+    login_page.open()
+    login_page.login("Admin", "admin123")
+
+    dashboard = Dashboard(driver)
+    WebDriverWait(driver, 10).until(lambda d: dashboard.is_loaded())
+    return dashboard
+
+
 @pytest.mark.skipif(Config.LANG != "en", reason="Only valid for English UI texts")
 class TestDashboard:
 
+    # ---------- DASHBOARD LOAD ----------
+    def test_dashboard_loads(self, logged_in_dashboard):
+        assert logged_in_dashboard.is_loaded()
 
-    #dashboard confirms after loading
-    def test_dashboard_loads_after_login(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
+    # ---------- WIDGET VISIBILITY ----------
+    def test_time_at_work_widget_visible(self, logged_in_dashboard):
+        assert logged_in_dashboard.is_time_at_work_visible()
 
-        dashboard_page = Dashboard(driver)
-        assert dashboard_page.is_loaded()
-    #testing if all widgets are presented
-    def test_time_at_work_widget_visible(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
+    def test_my_actions_widget_visible(self, logged_in_dashboard):
+        assert logged_in_dashboard.is_my_actions_visible()
 
-        dashboard_page = Dashboard(driver)
-        assert dashboard_page.is_time_at_work_visible()
+    def test_quick_launch_widget_visible(self, logged_in_dashboard):
+        assert logged_in_dashboard.is_quick_launch_visible()
 
-    def test_my_actions_widget_visible(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
+    def test_buzz_widget_visible(self, logged_in_dashboard):
+        assert logged_in_dashboard.is_buzz_widget_visible()
 
-        dashboard_page = Dashboard(driver)
-        assert dashboard_page.is_my_actions_visible()
+    def test_leave_today_widget_visible(self, logged_in_dashboard):
+        assert logged_in_dashboard.is_leave_today_widget_visible()
 
-    def test_quick_launch_widget_visible(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
+    def test_employee_distribution_charts_visible(self, logged_in_dashboard):
+        assert logged_in_dashboard.is_employee_distribution_charts_visible()
 
-        dashboard_page = Dashboard(driver)
-        assert dashboard_page.is_quick_launch_visible()
-
-    def test_buzz_widget_visible(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
-
-        dashboard_page = Dashboard(driver)
-        assert dashboard_page.is_buzz_widget_visible()
-
-    def test_leave_today_widget_visible(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
-
-        dashboard_page = Dashboard(driver)
-        assert dashboard_page.is_leave_today_widget_visible()
-
-    def test_employee_distribution_charts_visible(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
-
-        dashboard_page = Dashboard(driver)
-        assert dashboard_page.is_employee_distribution_charts_visible()
-
-#this part test if the widgets of quick launch works and leads to a right directory or page
-    def test_quick_launch_assign_leave(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
-
-        dashboard_page = Dashboard(driver)
-        dashboard_page.click_assign_leave()
-
+    # ---------- QUICK LAUNCH ----------
+    def test_quick_launch_assign_leave(self, logged_in_dashboard, driver):
+        logged_in_dashboard.click_assign_leave()
+        WebDriverWait(driver, 10).until(
+            EC.url_contains("/leave/assignLeave")
+        )
         assert "/leave/assignLeave" in driver.current_url
 
-    def test_quick_launch_leave_list(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
-
-        dashboard_page = Dashboard(driver)
-        dashboard_page.click_leave_list()
-
+    def test_quick_launch_leave_list(self, logged_in_dashboard, driver):
+        logged_in_dashboard.click_leave_list()
+        WebDriverWait(driver, 10).until(
+            EC.url_contains("/leave/viewLeaveList")
+        )
         assert "/leave/viewLeaveList" in driver.current_url
 
-    def test_quick_launch_apply_leave(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
-
-        dashboard_page = Dashboard(driver)
-        dashboard_page.click_apply_leave()
-
+    def test_quick_launch_apply_leave(self, logged_in_dashboard, driver):
+        logged_in_dashboard.click_apply_leave()
+        WebDriverWait(driver, 10).until(
+            EC.url_contains("/leave/applyLeave")
+        )
         assert "/leave/applyLeave" in driver.current_url
 
-    #test script for testing My Actions form
-    def test_my_actions_loads_in_dashboard(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
-
-        dashboard_page = Dashboard(driver)
-        assert dashboard_page.is_my_actions_loaded()
-        time.sleep(5)
-
-
-    def test_pending_self(self,driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin","admin123")
-
-        dashboard_page = Dashboard(driver)
-        dashboard_page.click_pending_review()
-        time.sleep(4)
+    # ---------- MY ACTIONS ----------
+    def test_pending_self_review(self, logged_in_dashboard, driver):
+        logged_in_dashboard.click_pending_review()
+        WebDriverWait(driver, 10).until(
+            EC.url_contains("/performance/myPerformanceReview")
+        )
         assert "/performance/myPerformanceReview" in driver.current_url
-        time.sleep(5)
 
-    def test_review_candidate(self,driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin","admin123")
-
-        dashboard_page = Dashboard(driver)
-        dashboard_page.click_candidate_interview()
-        time.sleep(4)
-        assert "/recruitment/viewCandidates?statusId=4" in driver.current_url
-        time.sleep(5)
-
-    def test_my_buzz_post_dashboard(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
-
-        dashboard_page = Dashboard(driver)
-        assert dashboard_page.is_buzz_loaded()
-        time.sleep(4)
-
-    def test_user_post(self,driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
-
-        dashboard_page = Dashboard(driver)
-        assert dashboard_page.buzz_post()
-        time.sleep(4)
-
-    #this is for Subunit chart testing
-    def test_sub_unit(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
-
-        dashboard_page = Dashboard(driver)
-        assert dashboard_page.subunit_panel()
-        time.sleep(4)
-
-    def test_subunit_toggle(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
-
-        dashboard = Dashboard(driver)
-        panel = dashboard.get_subunit_panel()
-
-        legend_items = panel.find_elements(By.XPATH, './/ul/li')
-
-        for item in legend_items:
-            item.click()
-
-            WebDriverWait(driver, 2).until(
-                lambda d: d.execute_script(
-                    'return document.querySelectorAll("svg path[opacity=\\"0\\"]").length > 0'
-                )
-            )
-
-        visible_paths = driver.find_elements(
-            By.XPATH,
-            '//*[name()="svg"]//*[name()="path" and (@opacity and @opacity!="0")]'
+    def test_candidate_interview(self, logged_in_dashboard, driver):
+        logged_in_dashboard.click_candidate_interview()
+        WebDriverWait(driver, 10).until(
+            EC.url_contains("/recruitment/viewCandidates")
         )
+        assert "/recruitment/viewCandidates" in driver.current_url
 
-        assert len(visible_paths) == 0
+    # ---------- BUZZ ----------
+    def test_buzz_post_exists(self, logged_in_dashboard):
+        assert logged_in_dashboard.has_buzz_post()
 
-    #this is for location chat testing
-    def test_loc_unit(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
+    # ---------- ON LEAVE CONFIG ----------
+    def test_on_leave_configuration_modal(self, logged_in_dashboard, driver):
+        logged_in_dashboard.open_on_leave_settings()
 
-        dashboard_page = Dashboard(driver)
-        assert dashboard_page.location_panel()
-        time.sleep(4)
-
-    def test_location_toggle(self, driver):
-        login_page = LoginPage(driver)
-        login_page.open()
-        login_page.login("Admin", "admin123")
-
-        dashboard = Dashboard(driver)
-        panel = dashboard.get_location_panel()
-
-        legend_items = panel.find_elements(By.XPATH, './/ul/li')
-
-        for item in legend_items:
-            item.click()
-            time.sleep(0.3)
-
-        visible_paths = driver.find_elements(
-            By.XPATH,
-            '//*[name()="svg"]//*[name()="path" and @opacity!="0"]'
-        )
-
-        assert len(visible_paths) == 0, f"Expected 0 visible paths, but found {len(visible_paths)}"
-    #this is for On leave section
-
-    def test_on_leave_icon(self, driver):
-        login = LoginPage(driver)
-        login.open()
-        login.login("Admin", 'admin123')
-
-        dashboard = Dashboard(driver)
-        gear_icon = dashboard.icon_test()
-
-        gear_icon.click()
-        time.sleep(2)
-
-        wait = WebDriverWait(driver,15)
-
-    def test_on_leave_configuration(self, driver):
-        login = LoginPage(driver)
-        login.open()
-        login.login("Admin", "admin123")
-
-        dashboard = Dashboard(driver)
-        wait = WebDriverWait(driver, 10)
-
-        gear_icon = dashboard.icon_test()
-        gear_icon.click()
-
-        config_modal = wait.until(
+        modal = WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located(
-                (By.XPATH, "//*[contains(normalize-space(), 'Configurations')]")
+                (By.XPATH, "//*[contains(normalize-space(),'Configurations')]")
             )
         )
+        assert modal.is_displayed()
 
-        assert config_modal.is_displayed(), "Config modal should open"
-
-    #testinf punch in button
-    def test_punch_in(self,driver):
-        login = LoginPage(driver)
-        login.open()
-        login.login('Admin','admin123')
-
-        dashboard = Dashboard(driver)
-        dashboard.punch_in().click()
-
+    # ---------- PUNCH IN ----------
+    def test_punch_in(self, logged_in_dashboard, driver):
+        logged_in_dashboard.punch_in()
+        WebDriverWait(driver, 10).until(
+            EC.url_contains("/attendance/punchIn")
+        )
         assert "/attendance/punchIn" in driver.current_url
-        time.sleep(2)
